@@ -1,0 +1,39 @@
+[package]
+name = "json-schema-dsl"
+version = "0.1.0"
+edition = "2021"
+authors = ["linux_china <libing.chen@gmail.com>"]
+description = "A simple DSL to write JSON Schema"
+keywords = ["json-schema", "dsl"]
+categories = ["command-line-utilities"]
+documentation = "https://github.com/linux-china/json-schema-dsl"
+readme = "README.md"
+homepage = "https://github.com/linux-china/json-schema-dsl"
+repository = "https://github.com/linux-china/json-schema-dsl"
+license = "Apache-2.0"
+
+[dependencies]
+logos = { version = "0.14", features = ["export_derive"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+indexmap = { version = "2.3.0", features = ["serde"] }
+
+[dev-dependencies]
+ctor = "0.2"
+testresult = "0.4"
+assert_cmd = "2"
+predicates = "3.1.0"
+
+[profile.dev]
+opt-level = 0
+debug = 0
+
+[profile.dev.package."*"]
+opt-level = 3
+
+[profile.release]
+strip = true
+lto = true
+opt-level = "z"
+codegen-units = 1
+panic = "abort"

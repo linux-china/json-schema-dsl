@@ -65,7 +65,7 @@ pub enum Token {
     #[token("...")]
     Ellipsis,
 
-    #[regex("integer|int|long|bigint|number|float|double|real|decimal|boolean|bool|string|bytes|varchar|Text",
+    #[regex("integer|int|long|bigint|number|float|double|real|decimal|boolean|bool|string|bytes|varchar|String|Text",
     |lex| lex.slice().to_owned())]
     PrimitiveType(String),
 
@@ -78,7 +78,7 @@ pub enum Token {
     )]
     ArrayType((String, String)),
 
-    #[regex("(integer|int|long|bigint|number|float|double|real|decimal|boolean|bool|string|bytes|varchar|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|int|long|bigint|number|float|double|real|decimal|boolean|bool|string|bytes|varchar|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID))+",
+    #[regex("(integer|int|long|bigint|number|float|double|real|decimal|boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|int|long|bigint|number|float|double|real|decimal|boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID))+",
     |lex| lex.slice().to_owned())]
     AnyOf(String),
 

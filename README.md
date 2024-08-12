@@ -1,7 +1,7 @@
 JSON Schema DSL
 ==================
 
-A simple DSL to write JSON Schema.
+A simple DSL to generate JSON Schema with one-liner style.
 
 # Why JSON Schema DSL?
 

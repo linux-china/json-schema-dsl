@@ -73,7 +73,7 @@ pub enum Token {
     |lex| lex.slice().to_owned())]
     FormatType(String),
 
-    #[regex("(List|list|Set|set|Array|array)<(integer|int|long|bigint|number|float|double|real|decimal|boolean|bool|string|bytes|varchar|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)>",
+    #[regex("(List|list|Set|set|Array|array)<(integer|int|long|bigint|number|float|double|real|decimal|boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)>",
         array_type_callback
     )]
     ArrayType((String, String)),

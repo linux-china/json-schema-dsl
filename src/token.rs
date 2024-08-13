@@ -68,6 +68,10 @@ pub enum Token {
     #[token("...")]
     Ellipsis,
 
+    #[regex(r#"(integer|int|long|bigint|number|float|double|real|decimal)\([^)]+\)"#, |lex| lex.slice().to_owned()
+    )]
+    RangeType(String),
+
     #[regex("integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text",
     |lex| lex.slice().to_owned())]
     PrimitiveType(String),
@@ -143,6 +147,10 @@ pub struct JsonSchemaEntry {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "enum")]
     pub enums: Option<Vec<Value>>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub minimum: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub maximum: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "uniqueItems")]
     pub unique_items: Option<bool>,
@@ -316,6 +324,23 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                         entry.enums = Some(items);
                     }
                 }
+                Token::RangeType(range_type) => {
+                    let offset = range_type.find('(').unwrap();
+                    let type_name = convert_to_json_type(range_type[..offset].trim());
+                    entry.type_name = type_name;
+                    let items_text = range_type[offset..].trim_matches(&['(', ')']).trim();
+                    if items_text.starts_with(",") { //maximum
+                        entry.maximum = Some(Value::from_str(items_text[1..].trim()).unwrap());
+                    } else if items_text.ends_with(",") { //minimum
+                        entry.minimum = Some(Value::from_str(items_text[..items_text.len() - 1].trim()).unwrap());
+                    } else {
+                        let items = items_text.split(',').collect::<Vec<&str>>();
+                        if items.len() == 2 {
+                            entry.minimum = Some(Value::from_str(items[0]).unwrap());
+                            entry.maximum = Some(Value::from_str(items[1]).unwrap());
+                        }
+                    }
+                }
                 Token::RegexType(regex_type) => {
                     let pattern = regex_type[5..].trim()
                         .trim_matches(&['(', ')'])
@@ -385,7 +410,7 @@ fn convert_to_json_type(type_name: &str) -> String {
     let name = type_name.to_lowercase();
     match name.as_str() {
         "varchar" | "text" | "bytes" => "string".to_string(),
-        "int" | "long" => "integer".to_string(),
+        "int" | "long" | "bigint" => "integer".to_string(),
         "float" | "double" | "real" | "decimal" => "number".to_string(),
         "bool" => "boolean".to_string(),
         _ => name
@@ -421,7 +446,7 @@ mod tests {
 
     #[test]
     fn test_lexer() {
-        let text = r#"User { id: int, name, age }"#;
+        let text = r#"User { id: int(1000,), name: string }"#;
         let mut lexer = Token::lexer(text);
         while let Some(token) = lexer.next() {
             println!("{:?}", token);
@@ -429,7 +454,7 @@ mod tests {
     }
     #[test]
     fn test_parse() {
-        let text = r#"User { id: int, name, age }"#;
+        let text = r#"User { id: int(1000,), name, age }"#;
         let json_schema = to_json_schema(text).unwrap();
         println!("{}", serde_json::to_string_pretty(&json_schema).unwrap())
     }

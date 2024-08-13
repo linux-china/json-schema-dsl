@@ -5,6 +5,9 @@ use serde::{Deserialize, Serialize};
 use serde_json::{Value};
 
 const FORMAT_NAMES: &'static [&'static str] = &["Date", "Time", "DateTime", "Duration", "Email", "Ipv4", "Ipv6", "Uri", "Hostname", "Uuid", "UUID"];
+const NUMBER_NAMES: &'static [&'static str] = &["price", "rate", "height", "width", "weight", "amount", "total", "percent", "ratio"];
+const INTEGER_NAMES: &'static [&'static str] = &["age", "year", "count", "size", "length", "delay", "time", "duration", "level", "index", "position", "order", "size", "limit", "offset", "page", "quantity", "capacity", "interval", "retries", "max", "min"];
+const BOOLEAN_NAMES: &'static [&'static str] = &["has", "is", "does", "allow", "should", "if", "can", "may", "will", "must"];
 
 fn array_type_callback(lex: &mut Lexer<Token>) -> (String, String) {
     let complex_type = lex.slice().to_owned();
@@ -194,6 +197,27 @@ impl JsonSchemaEntry {
         }
     }
 
+    pub fn revise(&mut self) {
+        if self.type_name.is_empty() {
+            let field_name = &self.name;
+            if field_name.contains("time") || field_name.contains("_at") {
+                self.type_name = "string".to_owned();
+                self.format = Some("date-time".to_owned());
+            } else if field_name.contains("date") {
+                self.type_name = "string".to_owned();
+                self.format = Some("date".to_owned());
+            } else if BOOLEAN_NAMES.iter().any(|&item| field_name.starts_with(item)) {
+                self.type_name = "boolean".to_owned();
+            } else if NUMBER_NAMES.iter().any(|&item| field_name.contains(item)) {
+                self.type_name = "number".to_owned();
+            } else if INTEGER_NAMES.iter().any(|&item| field_name.contains(item)) {
+                self.type_name = "integer".to_owned();
+            } else {
+                self.type_name = "string".to_owned();
+            }
+        }
+    }
+
     pub fn add_entry(&mut self, name: &str, type_name: &str) {
         if self.properties.is_none() {
             self.properties = Some(IndexMap::new());
@@ -231,6 +255,7 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                 }
                 Token::BraceClose => {
                     if !entry.name.is_empty() {
+                        entry.revise();
                         entries.insert(entry.name.clone(), entry.clone());
                     }
                     let additional_properties = entry.additional_properties.clone();
@@ -249,6 +274,7 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                 Token::Colon => {}
                 Token::Comma => {
                     if !entry.name.is_empty() {
+                        entry.revise();
                         entries.insert(entry.name.clone(), entry.clone());
                     }
                     entry = Default::default();
@@ -317,6 +343,7 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
         }
     }
     if !entry.name.is_empty() {
+        entry.revise();
         entries.insert(entry.name.clone(), entry.clone());
     } else if entry.additional_properties.is_some() {
         json_schema.additional_properties = entry.additional_properties.clone();
@@ -394,7 +421,7 @@ mod tests {
 
     #[test]
     fn test_lexer() {
-        let text = r#"User { id: int, name: string, birth_date: Date, cell_phone: regex('[\d]+'), email?: Email, tags: List<string>, birth: Date|DateTime, status: enum('First',"Second", 1, 2) }"#;
+        let text = r#"User { id: int, name, age }"#;
         let mut lexer = Token::lexer(text);
         while let Some(token) = lexer.next() {
             println!("{:?}", token);
@@ -402,7 +429,7 @@ mod tests {
     }
     #[test]
     fn test_parse() {
-        let text = r#"User { id: int, name: string, birth_date: Date, cell_phone: regex('[\d]+'), email?: Email, tags: List<string>, birth: Date|DateTime, status: enum('First',"Second", 1, 2), ... }"#;
+        let text = r#"User { id: int, name, age }"#;
         let json_schema = to_json_schema(text).unwrap();
         println!("{}", serde_json::to_string_pretty(&json_schema).unwrap())
     }

@@ -5,11 +5,14 @@ A simple DSL to generate JSON Schema with one-liner style.
 
 # Why JSON Schema DSL?
 
-- Make JSON Schema concise
-- AI friendly: Function calling, Structured Output with simple DSL
-- Schema friendly for CSV, Excel, Database table.
+1. Make JSON Schema concise:
+![JSON Schema DSL CLI](docs/images/json-schema-dsl-cli.png)
 
-![JSON Schema DSL](json-schema-dsl.png)
+2. AI friendly: Function calling, Structured Output with simple DSL:
+![JSON Schema DSL CLI](docs/images/ai-structured-output.png)
+
+3. Schema friendly for CSV, Excel, Text2SQL: 
+![JSON Schema DSL CLI](docs/images/json-schema-text2sql.png)
 
 # Get Started
 
@@ -57,6 +60,8 @@ fn main() {
 ```
 
 # Syntax
+
+![JSON Schema DSL](json-schema-dsl.png)
 
 `User { id: int, name: string, birth_date: Date, email?: Email, tags: List<string>}`
 

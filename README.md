@@ -6,13 +6,13 @@ A simple DSL to generate JSON Schema with one-liner style.
 # Why JSON Schema DSL?
 
 1. Make JSON Schema concise:
-![JSON Schema DSL CLI](docs/images/json-schema-dsl-cli.png)
+   ![JSON Schema DSL CLI](docs/images/json-schema-dsl-cli.png)
 
 2. AI friendly: Function calling, Structured Output with simple DSL:
-![JSON Schema DSL CLI](docs/images/ai-structured-output.png)
+   ![JSON Schema DSL CLI](docs/images/ai-structured-output.png)
 
-3. Schema friendly for CSV, Excel, Text2SQL: 
-![JSON Schema DSL CLI](docs/images/json-schema-text2sql.png)
+3. Schema friendly for CSV, Excel, Text2SQL:
+   ![JSON Schema DSL CLI](docs/images/json-schema-text2sql.png)
 
 # Get Started
 
@@ -22,7 +22,7 @@ CLI: `cargo install json-schema-dsl`
 $ json-schema-dsl "User{ id: int, name: string, email: Email}"
 ```
 
-Output as following: 
+Output as following:
 
 ```json
 {
@@ -66,7 +66,7 @@ fn main() {
 `User { id: int, name: string, birth_date: Date, email?: Email, tags: List<string>}`
 
 - Object Name: starts with capital character, such as `ObjectName { field: type }`.
-- Field name: starts with lower-case character. 
+- Field name: starts with lower-case character.
 - Optional field: `field?: type`
 
 ### Basic Types
@@ -80,7 +80,7 @@ JSON Schema basic types:
 
 ### array Types
 
-array type is alike `List<T>`, and T is a basic type or format name. 
+array type is alike `List<T>`, and T is a basic type or format name.
 
 - `List`: aliases: `list`
 - `Array`: aliases: `array`
@@ -110,6 +110,8 @@ JSON Schema formats, and name should start with a capital letter:
 
 ### Misc
 
+- range: `age: int(18,)`, `age: int(,150)` or `age: int(1,18)`
+- tuple: `income: [int, string]`
 - enum: `enum('a', 'b', 'c')` or `enum(1, 2, 3)`
 - regex: `regex('^[a-z]+$')`
 - anyOf: `field: type1|type2`, no space between types

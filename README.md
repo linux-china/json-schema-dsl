@@ -111,6 +111,7 @@ JSON Schema formats, and name should start with a capital letter:
 ### Misc
 
 - range: `age: int(18,)`, `age: int(,150)` or `age: int(1,18)`
+- string length range: `nick: string(6,32)`, `varchar(32)`
 - tuple: `income: [int, string]`
 - enum: `enum('a', 'b', 'c')` or `enum(1, 2, 3)`
 - regex: `regex('^[a-z]+$')`

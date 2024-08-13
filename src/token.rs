@@ -2,7 +2,7 @@ use std::str::FromStr;
 use indexmap::IndexMap;
 use logos::{Lexer, Logos};
 use serde::{Deserialize, Serialize};
-use serde_json::{Value};
+use serde_json::{json, Value};
 
 const FORMAT_NAMES: &'static [&'static str] = &["Date", "Time", "DateTime", "Duration", "Email", "Ipv4", "Ipv6", "Uri", "Hostname", "Uuid", "UUID"];
 const NUMBER_NAMES: &'static [&'static str] = &["price", "rate", "height", "width", "weight", "amount", "total", "percent", "ratio"];
@@ -68,9 +68,12 @@ pub enum Token {
     #[token("...")]
     Ellipsis,
 
-    #[regex(r#"(integer|int|long|bigint|number|float|double|real|decimal)\([^)]+\)"#, |lex| lex.slice().to_owned()
-    )]
+    #[regex(r#"(integer|int|long|bigint|number|float|double|real|decimal)\([^)]+\)"#,
+    |lex| lex.slice().to_owned())]
     RangeType(String),
+
+    #[regex(r#"\[[^]]+\]"#, |lex| lex.slice().to_owned())]
+    TupleType(String),
 
     #[regex("integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text",
     |lex| lex.slice().to_owned())]
@@ -143,7 +146,7 @@ pub struct JsonSchemaEntry {
     #[serde(rename = "anyOf")]
     pub any_of: Option<Vec<JsonSchemaEntry>>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub items: Option<Box<JsonSchemaEntry>>,
+    pub items: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "enum")]
     pub enums: Option<Vec<Value>>,
@@ -297,18 +300,22 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                 Token::ArrayType(array) => {
                     entry.type_name = "array".to_owned();
                     let container_type = array.0;
-                    let item_type = array.1;
-                    let mut item_entry: JsonSchemaEntry = Default::default();
-                    if FORMAT_NAMES.contains(&item_type.as_str()) {
-                        item_entry.type_name = "string".to_owned();
-                        item_entry.format = Some(convert_to_json_format(&item_type));
-                    } else {
-                        item_entry.type_name = convert_to_json_type(&item_type);
-                    }
                     if container_type.to_lowercase().starts_with("set") {
-                        item_entry.unique_items = Some(true);
+                        entry.unique_items = Some(true);
                     }
-                    entry.items = Some(Box::new(item_entry))
+                    let item_type = array.1;
+                    let item_entry = if FORMAT_NAMES.contains(&item_type.as_str()) {
+                        let format = convert_to_json_format(&item_type);
+                        json!({
+                            "type": "string",
+                            "format": format
+                        })
+                    } else {
+                        json!({
+                            "type": "string"
+                        })
+                    };
+                    entry.items = Some(item_entry);
                 }
                 Token::AnyOf(any_of) => {
                     let mut types: Vec<JsonSchemaEntry> = vec![];
@@ -323,6 +330,16 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                     if !items.is_empty() {
                         entry.enums = Some(items);
                     }
+                }
+                Token::TupleType(tuple_type) => {
+                    entry.type_name = "array".to_owned();
+                    let items_text = tuple_type.trim_matches(&['[', ']']).trim();
+                    let values = items_text.split(',').map(|item| {
+                        json!({
+                            "type": convert_to_json_type(item.trim())
+                        })
+                    }).collect::<Vec<Value>>();
+                    entry.items = Some(Value::from(values));
                 }
                 Token::RangeType(range_type) => {
                     let offset = range_type.find('(').unwrap();
@@ -446,7 +463,7 @@ mod tests {
 
     #[test]
     fn test_lexer() {
-        let text = r#"User { id: int(1000,), name: string }"#;
+        let text = r#"User { id: int, income: [int, string] }"#;
         let mut lexer = Token::lexer(text);
         while let Some(token) = lexer.next() {
             println!("{:?}", token);
@@ -454,7 +471,7 @@ mod tests {
     }
     #[test]
     fn test_parse() {
-        let text = r#"User { id: int(1000,), name, age }"#;
+        let text =  r#"User { id: int, income: [int, string] }"#;
         let json_schema = to_json_schema(text).unwrap();
         println!("{}", serde_json::to_string_pretty(&json_schema).unwrap())
     }

@@ -113,7 +113,7 @@ JSON Schema formats, and name should start with a capital letter:
 - enum: `enum('a', 'b', 'c')` or `enum(1, 2, 3)`
 - regex: `regex('^[a-z]+$')`
 - anyOf: `field: type1|type2`, no space between types
-- additionalProperties: `{field: type, ...}`
+- additionalProperties: `{field: type, ...}`, ellipsis before `}`.
 
 # References
 

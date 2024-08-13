@@ -72,6 +72,10 @@ pub enum Token {
     |lex| lex.slice().to_owned())]
     RangeType(String),
 
+    #[regex(r#"(string|bytes|varchar|String|Text)\([^)]+\)"#,
+    |lex| lex.slice().to_owned())]
+    StringLengthType(String),
+
     #[regex(r#"\[[^]]+\]"#, |lex| lex.slice().to_owned())]
     TupleType(String),
 
@@ -154,6 +158,12 @@ pub struct JsonSchemaEntry {
     pub minimum: Option<Value>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub maximum: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "minLength")]
+    pub min_length: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "maxLength")]
+    pub max_length: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "uniqueItems")]
     pub unique_items: Option<bool>,
@@ -353,8 +363,33 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                     } else {
                         let items = items_text.split(',').collect::<Vec<&str>>();
                         if items.len() == 2 {
-                            entry.minimum = Some(Value::from_str(items[0]).unwrap());
-                            entry.maximum = Some(Value::from_str(items[1]).unwrap());
+                            entry.minimum = Some(Value::from_str(items[0].trim()).unwrap());
+                            entry.maximum = Some(Value::from_str(items[1].trim()).unwrap());
+                        }
+                    }
+                }
+                Token::StringLengthType(length_type) => {
+                    let offset = length_type.find('(').unwrap();
+                    let type_name = length_type[0..offset].trim().to_lowercase();
+                    entry.type_name = "string".to_owned();
+                    let items_text = length_type[offset..].trim_matches(&['(', ')']).trim();
+                    if !items_text.contains(',') {
+                        let length = items_text.parse().unwrap();
+                        if type_name == "varchar" {
+                            entry.max_length = Some(length);
+                        } else {
+                            entry.min_length = Some(length);
+                            entry.max_length = Some(length);
+                        }
+                    } else if items_text.starts_with(",") { //maxLength
+                        entry.max_length = Some(items_text[1..].trim().parse().unwrap());
+                    } else if items_text.ends_with(",") { //minLength
+                        entry.min_length = Some(items_text[1..].trim().parse().unwrap());
+                    } else {
+                        let items = items_text.split(',').collect::<Vec<&str>>();
+                        if items.len() == 2 {
+                            entry.min_length = Some(items[0].trim().parse().unwrap());
+                            entry.max_length = Some(items[1].trim().parse().unwrap());
                         }
                     }
                 }
@@ -463,7 +498,7 @@ mod tests {
 
     #[test]
     fn test_lexer() {
-        let text = r#"User { id: int, income: [int, string] }"#;
+        let text = r#"User { id: int, nick: string(6,64) }"#;
         let mut lexer = Token::lexer(text);
         while let Some(token) = lexer.next() {
             println!("{:?}", token);

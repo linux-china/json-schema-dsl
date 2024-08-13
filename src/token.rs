@@ -9,12 +9,14 @@ const NUMBER_NAMES: &'static [&'static str] = &["price", "rate", "height", "widt
 const INTEGER_NAMES: &'static [&'static str] = &["age", "year", "count", "size", "length", "delay", "time", "duration", "level", "index", "position", "order", "size", "limit", "offset", "page", "quantity", "capacity", "interval", "retries", "max", "min"];
 const BOOLEAN_NAMES: &'static [&'static str] = &["has", "is", "does", "allow", "should", "if", "can", "may", "will", "must"];
 
-fn array_type_callback(lex: &mut Lexer<Token>) -> (String, String) {
+fn array_type_callback(lex: &mut Lexer<Token>) -> (String, String, String) {
     let complex_type = lex.slice().to_owned();
     let offset = complex_type.find('<').unwrap();
     let container_type = complex_type[..offset].to_owned();
-    let item_type = complex_type[offset + 1..(complex_type.len() - 1)].to_owned();
-    (container_type, item_type)
+    let end_offset = complex_type.rfind('>').unwrap();
+    let item_type = complex_type[offset + 1..end_offset].to_owned();
+    let range_type = complex_type[end_offset + 1..].trim();
+    (container_type, item_type, range_type.to_string())
 }
 
 #[derive(Debug, Logos)]
@@ -87,10 +89,10 @@ pub enum Token {
     |lex| lex.slice().to_owned())]
     FormatType(String),
 
-    #[regex("(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)>",
+    #[regex(r#"(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)>(\([^)]+\))?"#,
         array_type_callback
     )]
-    ArrayType((String, String)),
+    ArrayType((String, String, String)),
 
     #[regex("(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID))+",
     |lex| lex.slice().to_owned())]
@@ -151,6 +153,12 @@ pub struct JsonSchemaEntry {
     pub any_of: Option<Vec<JsonSchemaEntry>>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub items: Option<Value>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "minItems")]
+    pub min_items: Option<u32>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    #[serde(rename = "maxItems")]
+    pub max_items: Option<u32>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[serde(rename = "enum")]
     pub enums: Option<Vec<Value>>,
@@ -325,6 +333,24 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                             "type": "string"
                         })
                     };
+                    let range_type = array.2;
+                    if range_type.starts_with('(') {
+                        let items_text = range_type.trim_matches(&['(', ')']).trim();
+                        if !items_text.contains(",") {
+                            entry.min_items = Some(items_text.parse().unwrap());
+                            entry.max_items = Some(items_text.parse().unwrap());
+                        } else if items_text.starts_with(",") { //maxItems
+                            entry.max_items = Some(items_text[1..].parse().unwrap());
+                        } else if items_text.ends_with(",") { //minItems
+                            entry.min_items = Some(items_text[..items_text.len() - 1].parse().unwrap());
+                        } else {
+                            let items = items_text.split(',').collect::<Vec<&str>>();
+                            if items.len() == 2 {
+                                entry.min_items = Some(items[0].parse().unwrap());
+                                entry.max_items = Some(items[1].parse().unwrap());
+                            }
+                        }
+                    }
                     entry.items = Some(item_entry);
                 }
                 Token::AnyOf(any_of) => {
@@ -506,7 +532,7 @@ mod tests {
     }
     #[test]
     fn test_parse() {
-        let text =  r#"User { id: int, income: [int, string] }"#;
+        let text = r#"User { id: int, tags: list<string>(2,4) }"#;
         let json_schema = to_json_schema(text).unwrap();
         println!("{}", serde_json::to_string_pretty(&json_schema).unwrap())
     }

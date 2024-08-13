@@ -1,6 +1,6 @@
 [package]
 name = "json-schema-dsl"
-version = "0.1.0"
+version = "0.2.0"
 edition = "2021"
 authors = ["linux_china <libing.chen@gmail.com>"]
 description = "A simple DSL to write JSON Schema"

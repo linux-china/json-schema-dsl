@@ -73,8 +73,8 @@ fn main() {
 
 JSON Schema basic types:
 
-- `string`: aliases:  `varchar`, `Text`, `String`, `bytes`(base64)
-- `integer`: aliases: `int`, `long`
+- `string`: aliases:  `varchar`, `Text`, `String`, `bytes` or `bytea`(base64)
+- `integer`: aliases: `int`, `bigint`, `long`, `serial`, `bigserial`
 - `number`: aliases: `float`, `double`, `real`, `decimal`
 - `boolean`: aliases: `bool`
 
@@ -99,6 +99,8 @@ JSON Schema formats, and name should start with a capital letter:
 - `Date`
 - `Time`
 - `Datetime`
+- `Timestamp`
+- `Interval`
 - `Duration`
 - `Email`
 - `Hostname`
@@ -107,6 +109,8 @@ JSON Schema formats, and name should start with a capital letter:
 - `Uri`
 - `Hostname`
 - `Uuid` or `UUID`
+- `Json` or `JSON`: JSON text
+- `Xml` or `XML`: XML text
 
 ### Misc
 

@@ -4,7 +4,7 @@ use logos::{Lexer, Logos};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 
-const FORMAT_NAMES: &'static [&'static str] = &["Date", "Time", "DateTime", "Duration", "Email", "Ipv4", "Ipv6", "Uri", "Hostname", "Uuid", "UUID"];
+const FORMAT_NAMES: &'static [&'static str] = &["Date", "Time", "DateTime", "Timestamp", "Interval", "Duration", "Email", "Ipv4", "Ipv6", "Uri", "Hostname", "Uuid", "UUID", "Json", "JSON", "Xml", "XML"];
 const NUMBER_NAMES: &'static [&'static str] = &["price", "rate", "height", "width", "weight", "amount", "total", "percent", "ratio"];
 const INTEGER_NAMES: &'static [&'static str] = &["age", "year", "count", "size", "length", "delay", "time", "duration", "level", "index", "position", "order", "size", "limit", "offset", "page", "quantity", "capacity", "interval", "retries", "max", "min"];
 const BOOLEAN_NAMES: &'static [&'static str] = &["has", "is", "does", "allow", "should", "if", "can", "may", "will", "must"];
@@ -81,7 +81,7 @@ pub enum Token {
     #[regex(r#"\[[^]]+\]"#, |lex| lex.slice().to_owned())]
     TupleType(String),
 
-    #[regex("integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text",
+    #[regex("integer|Integer|int|long|bigint|serial|bigserial|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text",
     |lex| lex.slice().to_owned())]
     PrimitiveType(String),
 
@@ -89,12 +89,12 @@ pub enum Token {
     |lex| lex.slice().to_owned())]
     FormatType(String),
 
-    #[regex(r#"(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)>(\([^)]+\))?"#,
+    #[regex(r#"(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)>(\([^)]+\))?"#,
         array_type_callback
     )]
     ArrayType((String, String, String)),
 
-    #[regex("(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|varchar|String|Text|Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID))+",
+    #[regex("(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID))+",
     |lex| lex.slice().to_owned())]
     AnyOf(String),
 
@@ -487,8 +487,8 @@ fn parse_array(text: &str) -> Vec<Value> {
 fn convert_to_json_type(type_name: &str) -> String {
     let name = type_name.to_lowercase();
     match name.as_str() {
-        "varchar" | "text" | "bytes" => "string".to_string(),
-        "int" | "long" | "bigint" => "integer".to_string(),
+        "varchar" | "text" | "bytes" | "bytea" => "string".to_string(),
+        "int" | "long" | "bigint" | "serial" | "bigserial" => "integer".to_string(),
         "float" | "double" | "real" | "decimal" => "number".to_string(),
         "bool" => "boolean".to_string(),
         _ => name
@@ -498,7 +498,9 @@ fn convert_to_json_type(type_name: &str) -> String {
 fn convert_to_json_format(format_name: &str) -> String {
     let name = format_name.to_lowercase();
     match name.as_str() {
-        "datetime" => "date-time".to_string(),
+        "datetime" | "timestamp" => "date-time".to_string(),
+        "interval" => "duration".to_string(),
+        "json" | "xml" => "string".to_string(),
         _ => name
     }
 }

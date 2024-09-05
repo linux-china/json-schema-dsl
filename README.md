@@ -74,7 +74,7 @@ fn main() {
 JSON Schema basic types:
 
 - `string`: aliases:  `varchar`, `Text`, `String`, `bytes` or `bytea`(base64)
-- `integer`: aliases: `int`, `bigint`, `long`, `serial`, `bigserial`
+- `integer`: aliases: `int`, `bigint`, `long`, `serial`, `bigserial`,`int32`, `int64`, `int96`, `int128`
 - `number`: aliases: `float`, `double`, `real`, `decimal`
 - `boolean`: aliases: `bool`
 

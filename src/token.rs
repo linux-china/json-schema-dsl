@@ -81,7 +81,7 @@ pub enum Token {
     #[regex(r#"\[[^]]+\]"#, |lex| lex.slice().to_owned())]
     TupleType(String),
 
-    #[regex("integer|Integer|int|long|bigint|serial|bigserial|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text",
+    #[regex("integer|Integer|int|int32|int64|int96|int128|long|bigint|serial|bigserial|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text",
     |lex| lex.slice().to_owned())]
     PrimitiveType(String),
 
@@ -94,7 +94,7 @@ pub enum Token {
     )]
     ArrayType((String, String, String)),
 
-    #[regex("(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID))+",
+    #[regex("(integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID))+",
     |lex| lex.slice().to_owned())]
     AnyOf(String),
 

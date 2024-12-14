@@ -1,13 +1,54 @@
-use std::str::FromStr;
 use indexmap::IndexMap;
 use logos::{Lexer, Logos};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
+use std::str::FromStr;
 
-const FORMAT_NAMES: &'static [&'static str] = &["Date", "Time", "DateTime", "Timestamp", "Interval", "Duration", "Email", "Ipv4", "Ipv6", "Uri", "Hostname", "Uuid", "UUID", "Json", "JSON", "Xml", "XML"];
-const NUMBER_NAMES: &'static [&'static str] = &["price", "rate", "height", "width", "weight", "amount", "total", "percent", "ratio"];
-const INTEGER_NAMES: &'static [&'static str] = &["age", "year", "count", "size", "length", "delay", "time", "duration", "level", "index", "position", "order", "size", "limit", "offset", "page", "quantity", "capacity", "interval", "retries", "max", "min"];
-const BOOLEAN_NAMES: &'static [&'static str] = &["has", "is", "does", "allow", "should", "if", "can", "may", "will", "must"];
+const FORMAT_NAMES: &'static [&'static str] = &[
+    "Date",
+    "Time",
+    "DateTime",
+    "Timestamp",
+    "Interval",
+    "Duration",
+    "Email",
+    "Ipv4",
+    "Ipv6",
+    "Uri",
+    "Hostname",
+    "Domainname",
+    "Uuid",
+    "UUID",
+    "Ulid",
+    "ULID",
+    "Json",
+    "JSON",
+    "Xml",
+    "XML",
+    "Color",
+    "Isbn",
+    "Path",
+    "S3Path",
+    "SemVer",
+    "PhoneNumber",
+    "CreditCard",
+    "Currency",
+    "MimeType",
+    "Language",
+    "Locale",
+    "Base64",
+];
+const NUMBER_NAMES: &'static [&'static str] = &[
+    "price", "rate", "height", "width", "weight", "amount", "total", "percent", "ratio",
+];
+const INTEGER_NAMES: &'static [&'static str] = &[
+    "age", "year", "count", "size", "length", "delay", "time", "duration", "level", "index",
+    "position", "order", "size", "limit", "offset", "page", "quantity", "capacity", "interval",
+    "retries", "max", "min",
+];
+const BOOLEAN_NAMES: &'static [&'static str] = &[
+    "has", "is", "does", "allow", "should", "if", "can", "may", "will", "must",
+];
 
 fn array_type_callback(lex: &mut Lexer<Token>) -> (String, String, String) {
     let complex_type = lex.slice().to_owned();
@@ -85,16 +126,16 @@ pub enum Token {
     |lex| lex.slice().to_owned())]
     PrimitiveType(String),
 
-    #[regex("Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID",
+    #[regex("Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64",
     |lex| lex.slice().to_owned())]
     FormatType(String),
 
-    #[regex(r#"(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)>(\([^)]+\))?"#,
+    #[regex(r#"(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64)>(\([^)]+\))?"#,
         array_type_callback
     )]
     ArrayType((String, String, String)),
 
-    #[regex("(integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID))+",
+    #[regex("(integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64))+",
     |lex| lex.slice().to_owned())]
     AnyOf(String),
 
@@ -235,7 +276,10 @@ impl JsonSchemaEntry {
             } else if field_name.contains("date") {
                 self.type_name = "string".to_owned();
                 self.format = Some("date".to_owned());
-            } else if BOOLEAN_NAMES.iter().any(|&item| field_name.starts_with(item)) {
+            } else if BOOLEAN_NAMES
+                .iter()
+                .any(|&item| field_name.starts_with(item))
+            {
                 self.type_name = "boolean".to_owned();
             } else if NUMBER_NAMES.iter().any(|&item| field_name.contains(item)) {
                 self.type_name = "number".to_owned();
@@ -339,10 +383,13 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                         if !items_text.contains(",") {
                             entry.min_items = Some(items_text.parse().unwrap());
                             entry.max_items = Some(items_text.parse().unwrap());
-                        } else if items_text.starts_with(",") { //maxItems
+                        } else if items_text.starts_with(",") {
+                            //maxItems
                             entry.max_items = Some(items_text[1..].parse().unwrap());
-                        } else if items_text.ends_with(",") { //minItems
-                            entry.min_items = Some(items_text[..items_text.len() - 1].parse().unwrap());
+                        } else if items_text.ends_with(",") {
+                            //minItems
+                            entry.min_items =
+                                Some(items_text[..items_text.len() - 1].parse().unwrap());
                         } else {
                             let items = items_text.split(',').collect::<Vec<&str>>();
                             if items.len() == 2 {
@@ -370,11 +417,14 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                 Token::TupleType(tuple_type) => {
                     entry.type_name = "array".to_owned();
                     let items_text = tuple_type.trim_matches(&['[', ']']).trim();
-                    let values = items_text.split(',').map(|item| {
-                        json!({
-                            "type": convert_to_json_type(item.trim())
+                    let values = items_text
+                        .split(',')
+                        .map(|item| {
+                            json!({
+                                "type": convert_to_json_type(item.trim())
+                            })
                         })
-                    }).collect::<Vec<Value>>();
+                        .collect::<Vec<Value>>();
                     entry.items = Some(Value::from(values));
                 }
                 Token::RangeType(range_type) => {
@@ -382,10 +432,14 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                     let type_name = convert_to_json_type(range_type[..offset].trim());
                     entry.type_name = type_name;
                     let items_text = range_type[offset..].trim_matches(&['(', ')']).trim();
-                    if items_text.starts_with(",") { //maximum
+                    if items_text.starts_with(",") {
+                        //maximum
                         entry.maximum = Some(Value::from_str(items_text[1..].trim()).unwrap());
-                    } else if items_text.ends_with(",") { //minimum
-                        entry.minimum = Some(Value::from_str(items_text[..items_text.len() - 1].trim()).unwrap());
+                    } else if items_text.ends_with(",") {
+                        //minimum
+                        entry.minimum = Some(
+                            Value::from_str(items_text[..items_text.len() - 1].trim()).unwrap(),
+                        );
                     } else {
                         let items = items_text.split(',').collect::<Vec<&str>>();
                         if items.len() == 2 {
@@ -407,9 +461,11 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                             entry.min_length = Some(length);
                             entry.max_length = Some(length);
                         }
-                    } else if items_text.starts_with(",") { //maxLength
+                    } else if items_text.starts_with(",") {
+                        //maxLength
                         entry.max_length = Some(items_text[1..].trim().parse().unwrap());
-                    } else if items_text.ends_with(",") { //minLength
+                    } else if items_text.ends_with(",") {
+                        //minLength
                         entry.min_length = Some(items_text[1..].trim().parse().unwrap());
                     } else {
                         let items = items_text.split(',').collect::<Vec<&str>>();
@@ -420,7 +476,8 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                     }
                 }
                 Token::RegexType(regex_type) => {
-                    let pattern = regex_type[5..].trim()
+                    let pattern = regex_type[5..]
+                        .trim()
                         .trim_matches(&['(', ')'])
                         .trim()
                         .trim_matches(&['"', '\'']);
@@ -491,7 +548,7 @@ fn convert_to_json_type(type_name: &str) -> String {
         "int" | "long" | "bigint" | "serial" | "bigserial" => "integer".to_string(),
         "float" | "double" | "real" | "decimal" => "number".to_string(),
         "bool" => "boolean".to_string(),
-        _ => name
+        _ => name,
     }
 }
 
@@ -501,7 +558,7 @@ fn convert_to_json_format(format_name: &str) -> String {
         "datetime" | "timestamp" => "date-time".to_string(),
         "interval" => "duration".to_string(),
         "json" | "xml" => "string".to_string(),
-        _ => name
+        _ => name,
     }
 }
 
@@ -518,7 +575,6 @@ fn find_required_fields(entries: &IndexMap<String, JsonSchemaEntry>) -> Option<V
         None
     }
 }
-
 
 #[cfg(test)]
 mod tests {

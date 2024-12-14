@@ -78,6 +78,24 @@ JSON Schema basic types:
 - `number`: aliases: `float`, `double`, `real`, `decimal`
 - `boolean`: aliases: `bool`
 
+### Extra Types
+
+Extra types are for semantic meaning, and they are all string type.
+
+- `Path`: `/path/to/file`
+- `S3Path`: `s3://bucket/key`
+- `Ulid` or `ULID`
+- `Color`: `#F7F8FA`
+- `Isbn` or `ISBN`: `978-3-16-148410-0`
+- `SemVer`: `1.2.3`
+- `PhoneNumber`: `+1-202-555-0192`
+- `CreditCard`: `4111 1111 1111 1111`
+- `Currency`: `USD`, `CNY`
+- `Language`: `en`, `zh-CN`
+- `Locale`: `en-US`, `zh-CN`
+- `MimeType`: `application/json`
+- `Base64`: base64 encoded string
+
 ### array Types
 
 array type is alike `List<T>`, and T is a basic type or format name.
@@ -108,22 +126,9 @@ JSON Schema formats, and name should start with a capital letter:
 - `Ipv4`
 - `Ipv6`
 - `Uri`
-- `Path`: `/path/to/file`
-- `S3Path`: `s3://bucket/key`
 - `Uuid` or `UUID`
-- `Ulid` or `ULID`
 - `Json` or `JSON`: JSON text
 - `Xml` or `XML`: XML text
-- `Color`: `#F7F8FA`
-- `Isbn`: `978-3-16-148410-0`
-- `SemVer`: `1.2.3`
-- `PhoneNumber`: `+1-202-555-0192`
-- `CreditCard`: `4111 1111 1111 1111`
-- `Currency`: `USD`, `CNY`
-- `Language`: `en`, `zh-CN`
-- `Locale`: `en-US`, `zh-CN`
-- `MimeType`: `application/json`
-- `Base64`: base64 encoded string
 
 ### Misc
 

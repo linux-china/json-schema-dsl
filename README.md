@@ -95,6 +95,7 @@ Extra types are for semantic meaning, and they are all string type.
 - `Locale`: `en-US`, `zh-CN`
 - `MimeType`: `application/json`
 - `Base64`: base64 encoded string
+- `Pattern`: regex pattern
 
 ### array Types
 

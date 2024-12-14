@@ -39,6 +39,7 @@ const FORMAT_NAMES: &'static [&'static str] = &[
     "Language",
     "Locale",
     "Base64",
+    "Pattern"
 ];
 const NUMBER_NAMES: &'static [&'static str] = &[
     "price", "rate", "height", "width", "weight", "amount", "total", "percent", "ratio",
@@ -128,7 +129,7 @@ pub enum Token {
     |lex| lex.slice().to_owned())]
     PrimitiveType(String),
 
-    #[regex("Ulid|ULID|Color|Isbn|ISBN|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64",
+    #[regex("Ulid|ULID|Color|Isbn|ISBN|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64|Pattern",
     |lex| lex.slice().to_owned())]
     ExtraType(String),
 
@@ -141,7 +142,7 @@ pub enum Token {
     )]
     ArrayType((String, String, String)),
 
-    #[regex("(integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|ISBN|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64))+",
+    #[regex("(integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|ISBN|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64|Pattern))+",
     |lex| lex.slice().to_owned())]
     AnyOf(String),
 

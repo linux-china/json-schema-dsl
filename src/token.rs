@@ -27,6 +27,7 @@ const FORMAT_NAMES: &'static [&'static str] = &[
     "XML",
     "Color",
     "Isbn",
+    "ISBN",
     "Path",
     "S3Path",
     "SemVer",
@@ -126,16 +127,20 @@ pub enum Token {
     |lex| lex.slice().to_owned())]
     PrimitiveType(String),
 
-    #[regex("Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64",
+    #[regex("Ulid|ULID|Color|Isbn|ISBN|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64",
+    |lex| lex.slice().to_owned())]
+    ExtraType(String),
+
+    #[regex("Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID",
     |lex| lex.slice().to_owned())]
     FormatType(String),
 
-    #[regex(r#"(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64)>(\([^)]+\))?"#,
+    #[regex(r#"(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|ISBN|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64)>(\([^)]+\))?"#,
         array_type_callback
     )]
     ArrayType((String, String, String)),
 
-    #[regex("(integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64))+",
+    #[regex("(integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Uuid|UUID)([|](integer|Integer|int|int32|int64|int96|int128|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|ISBN|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64))+",
     |lex| lex.slice().to_owned())]
     AnyOf(String),
 
@@ -355,6 +360,9 @@ pub fn to_json_schema(struct_text: &str) -> Result<JsonSchema, String> {
                 Token::PrimitiveType(type_name) => {
                     entry.type_name = convert_to_json_type(&type_name);
                 }
+                Token::ExtraType(type_name) => {
+                    entry.type_name = convert_to_json_type(&type_name);
+                }
                 Token::FormatType(format_name) => {
                     entry.type_name = "string".to_owned();
                     entry.format = Some(convert_to_json_format(&format_name));
@@ -545,6 +553,8 @@ fn convert_to_json_type(type_name: &str) -> String {
     let name = type_name.to_lowercase();
     match name.as_str() {
         "varchar" | "text" | "bytes" | "bytea" => "string".to_string(),
+        "isbn" | "ulid" | "path" | "s3path" | "semver" | "phonenumber" | "creditcard"
+        | "currency" | "mimetype" | "language" | "locale" | "base64" => "string".to_string(),
         "int" | "long" | "bigint" | "serial" | "bigserial" => "integer".to_string(),
         "float" | "double" | "real" | "decimal" => "number".to_string(),
         "bool" => "boolean".to_string(),
@@ -557,6 +567,7 @@ fn convert_to_json_format(format_name: &str) -> String {
     match name.as_str() {
         "datetime" | "timestamp" => "date-time".to_string(),
         "interval" => "duration".to_string(),
+        "domainname" => "hostname".to_string(),
         "json" | "xml" => "string".to_string(),
         _ => name,
     }

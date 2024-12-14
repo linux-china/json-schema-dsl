@@ -149,4 +149,5 @@ JSON Schema formats, and name should start with a capital letter:
 * JSON Schema: https://json-schema.org/
 * JSON Schema formats: https://json-schema.org/understanding-json-schema/reference/string#built-in-formats
 * M-Schema: a semi-structure representation of database schema - https://github.com/XGenerationLab/M-Schema
+* Pydantic: data validation library for Python - https://docs.pydantic.dev/
 

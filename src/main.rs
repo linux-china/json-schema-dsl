@@ -1,6 +1,6 @@
 use std::env::args;
 
-const VERSION: &str = "0.2.1";
+const VERSION: &str = "0.2.2";
 
 fn main() {
     let args: Vec<String> = args().collect();

@@ -126,6 +126,7 @@ JSON Schema formats, and name should start with a capital letter:
 - `Ipv4`
 - `Ipv6`
 - `Uri`
+- `HttpUrl`
 - `Uuid` or `UUID`
 - `Json` or `JSON`: JSON text
 - `Xml` or `XML`: XML text

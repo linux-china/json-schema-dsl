@@ -15,6 +15,7 @@ const FORMAT_NAMES: &'static [&'static str] = &[
     "Ipv4",
     "Ipv6",
     "Uri",
+    "HttpUrl",
     "Hostname",
     "Domainname",
     "Uuid",
@@ -131,11 +132,11 @@ pub enum Token {
     |lex| lex.slice().to_owned())]
     ExtraType(String),
 
-    #[regex("Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID",
+    #[regex("Date|Time|DateTime|Duration|Email|Ipv4|Ipv6|Uri|HttpUrl|Hostname|Domainname|Uuid|UUID",
     |lex| lex.slice().to_owned())]
     FormatType(String),
 
-    #[regex(r#"(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|ISBN|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64)>(\([^)]+\))?"#,
+    #[regex(r#"(List|list|Set|set|Array|array)<(integer|Integer|int|long|bigint|number|Number|float|double|real|decimal|boolean|Boolean|bool|string|bytes|bytea|varchar|String|Text|Date|Time|DateTime|Timestamp|Interval|Duration|Email|Ipv4|Ipv6|Uri|HttpUrl|Hostname|Domainname|Uuid|UUID|Ulid|ULID|Color|Isbn|ISBN|Path|S3Path|SemVer|PhoneNumber|CreditCard|Currency|MimeType|Language|Locale|Base64)>(\([^)]+\))?"#,
         array_type_callback
     )]
     ArrayType((String, String, String)),
@@ -568,6 +569,7 @@ fn convert_to_json_format(format_name: &str) -> String {
         "datetime" | "timestamp" => "date-time".to_string(),
         "interval" => "duration".to_string(),
         "domainname" => "hostname".to_string(),
+        "httpurl" => "uri".to_string(),
         "json" | "xml" => "string".to_string(),
         _ => name,
     }
